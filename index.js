@@ -690,20 +690,47 @@ miniBoss.players.push(msg.author.id);
 let scale = miniBoss.players.length
 
 let dmg = 20 + Math.floor(Math.random()*10) + scale
+
 const user = getUser(msg.author.id)
 
 let skillText = ""
 
-if(user.skill !== null){
+if(user.skill !== null && user.class){
 
 const skill = skills[user.class][user.skill]
 
-dmg += skill.power
+dmg += skill.dmg
 
 skillText = `\n✨ Skill: ${skill.name}`
 
 }
 
+miniBoss.hp -= dmg;
+
+if(miniBoss.hp <= 0){
+
+miniBoss.players.forEach(p=>{
+
+const u = getUser(p);
+
+u.vnd += 200;
+u.exp += 50;
+
+});
+
+miniBoss = null;
+
+msg.reply("MiniBoss đã bị tiêu diệt");
+
+}else{
+
+msg.reply(`Bạn gây ${dmg} dmg${skillText}
+
+❤️ Boss còn **${miniBoss.hp} HP**`);
+
+}
+
+}
 // ===== SKILL SYSTEM =====
 const user = getUser(msg.author.id)
 
@@ -751,21 +778,84 @@ if(!worldBoss.players.includes(msg.author.id))
 worldBoss.players.push(msg.author.id)
 
 let scale = worldBoss.players.length
+
 let dmg = 20 + Math.floor(Math.random()*10) + scale
+
 const user = getUser(msg.author.id)
 
 let skillText = ""
 
-if(user.skill !== null){
+if(user.skill !== null && user.class){
 
 const skill = skills[user.class][user.skill]
 
-dmg += skill.power
+dmg += skill.dmg
 
 skillText = `\n✨ Skill: ${skill.name}`
 
 }
 
+if(worldBoss.phase===2) dmg = Math.floor(dmg*1.5)
+
+worldBoss.hp -= dmg;
+
+if(worldBoss.hp < 1500 && worldBoss.phase===1){
+
+worldBoss.phase = 2;
+
+if(Math.random()<0.1){
+
+msg.channel.send("💥 Boss tự bạo tiêu diệt tất cả");
+
+worldBoss=null;
+
+return;
+
+}
+
+msg.channel.send("⚠️ Boss vào Phase 2");
+
+}
+
+if(worldBoss.hp <= 0){
+
+let players=[...new Set(worldBoss.players)];
+
+if(players.length===4 && Math.random()<0.25){
+
+const traitor=players[Math.floor(Math.random()*players.length)];
+
+const u=getUser(traitor);
+
+u.gold+=1000;
+
+msg.channel.send(`<@${traitor}> đã phản bội và cướp hết thưởng!`);
+
+}else{
+
+players.forEach(p=>{
+
+const u=getUser(p);
+
+u.gold+=250;
+
+});
+
+}
+
+worldBoss=null;
+
+msg.channel.send("🌍 WorldBoss bị tiêu diệt");
+
+}else{
+
+msg.reply(`Bạn gây ${dmg} dmg${skillText}
+
+❤️ Boss còn **${worldBoss.hp} HP**`)
+
+}
+
+}
 // ===== SKILL SYSTEM =====
 const user = getUser(msg.author.id)
 
@@ -1307,5 +1397,6 @@ const app = express()
 app.get("/", (req,res)=>{
 res.send("Bot is running")
 })
+
 
 app.listen(3000,()=>console.log("Server running"))
