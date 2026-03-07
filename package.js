@@ -1,0 +1,12 @@
+{
+  "name": "discord-rpg-bot",
+  "version": "1.0.0",
+  "description": "Mini RPG Discord Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1"
+  }
+}
