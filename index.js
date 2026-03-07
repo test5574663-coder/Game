@@ -548,6 +548,10 @@ while(user.exp >= getRequiredExp(user.level) && user.level < 100){
 
 let miniBoss = null
 let worldBoss = null
+  
+// ======== DRAGON EVENT ========
+
+let dragon = null
 
 
 // ======== SPAWN MINIBOSS ========
@@ -575,9 +579,10 @@ function spawnWorldBoss(){
 if(worldBoss) return
 
 worldBoss = {
-hp:5000,
-maxHp:3000,
+hp:50000,
+maxHp:60000,
 dmg:40,
+def:60,
 players:[],
 phase:1
 }
@@ -592,6 +597,51 @@ console.log("WorldBoss Spawn")
 setInterval(spawnMiniBoss,1800000);
 setInterval(spawnWorldBoss,10800000);
 
+// ======== DRAGON EVENT SPAWN ========
+
+function spawnDragon(){
+
+if(dragon) return
+
+if(Math.random() < 0.35){
+
+dragon = {
+hp:8000,
+maxHp:8000,
+players:[]
+}
+
+const channel = client.channels.cache.get(RPG_CHANNEL)
+
+if(!channel) return
+
+channel.send(`
+🐉 **HẮC LONG XUẤT HIỆN!**
+
+Spam **!dragon** để tấn công!
+
+⏳ Event kéo dài 2 phút
+`)
+
+setTimeout(()=>{
+
+if(dragon){
+
+channel.send("🐉 Con rồng bay đi vì không ai giết được!")
+
+dragon = null
+
+}
+
+},120000)
+
+}
+
+}
+
+// check mỗi 10 phút
+setInterval(spawnDragon,36000)
+
 
 // ======== MESSAGE COMMAND HANDLER ========
 
@@ -603,50 +653,42 @@ if(!msg.content.startsWith(prefix)) return;
 const args = msg.content.slice(prefix.length).split(" ");
 const cmd = args.shift().toLowerCase();
 
-if(miniBoss && !miniBoss.players.includes(msg.author.id)){
-miniBoss.players.push(msg.author.id)
-}
-
-//==============/class skill system/=========
-if(cmd==="skill"){
-
-const index = parseInt(args[0]) - 1
-
 const user = getUser(msg.author.id)
 
-if(!user.class)
-return msg.reply("Bạn chưa chọn class")
-
-const list = skills[user.class]
-
-if(!list[index])
-return msg.reply("Skill không tồn tại")
-
-user.skill = index
-
-msg.reply(`Bạn đã trang bị skill **${list[index].name}**`)
-
-}
-
-if(cmd==="skills"){
-
-if(!user.class)
-return msg.reply("Bạn chưa chọn class")
-
-const list = skills[user.class]
-
-let text="📜 Skill của class:\n\n"
-
-list.forEach((s,i)=>{
-text += `${i+1}. ${s.name}\n`
-})
-
-msg.reply(text)
-
-}
 
 // ======== DEV FORCE ========
+// ======== RANDOM EVENT SYSTEM ========
 
+let eventActive = false
+
+function spawnEvent(){
+
+if(eventActive) return
+
+if(Math.random() < 0.35){
+
+eventActive = true
+
+const channel = client.channels.cache.get(RPG_CHANNEL)
+
+if(!channel) return
+
+channel.send("🌋 **EVENT KHO BÁU!** Spam `!mine` trong 60s để đào vàng!")
+
+setTimeout(()=>{
+
+eventActive = false
+
+channel.send("⏳ Event kết thúc!")
+
+},60000)
+
+}
+
+}
+
+// check event mỗi 5 phút
+setInterval(spawnEvent,300000)
 if(cmd==="force"){
 
 if(!isDev(msg.member)) return
@@ -691,8 +733,6 @@ let scale = miniBoss.players.length
 
 let dmg = 20 + Math.floor(Math.random()*10) + scale
 
-const user = getUser(msg.author.id)
-
 let skillText = ""
 
 if(user.skill !== null && user.class){
@@ -731,41 +771,6 @@ msg.reply(`Bạn gây ${dmg} dmg${skillText}
 }
 
 }
-// ===== SKILL SYSTEM =====
-const user = getUser(msg.author.id)
-
-if(user.skill !== null){
-
-const skill = skills[user.class][user.skill]
-
-dmg += skill.power
-
-}
-
-miniBoss.hp-=dmg;
-
-if(miniBoss.hp<=0){
-
-miniBoss.players.forEach(p=>{
-
-const u=getUser(p);
-
-u.vnd+=200;
-u.exp+=50;
-
-});
-
-miniBoss=null;
-
-msg.reply("MiniBoss đã bị tiêu diệt");
-
-}else{
-
-msg.reply(`Bạn gây ${dmg} dmg`);
-
-}
-
-}
 
 
 // ======== WORLD BOSS BATTLE ========
@@ -780,8 +785,6 @@ worldBoss.players.push(msg.author.id)
 let scale = worldBoss.players.length
 
 let dmg = 20 + Math.floor(Math.random()*10) + scale
-
-const user = getUser(msg.author.id)
 
 let skillText = ""
 
@@ -857,13 +860,12 @@ msg.reply(`Bạn gây ${dmg} dmg${skillText}
 
 }
 // ===== SKILL SYSTEM =====
-const user = getUser(msg.author.id)
 
 if(user.skill !== null){
 
 const skill = skills[user.class][user.skill]
 
-dmg += skill.power
+dmg += skill.dmg
 
 }
 
@@ -1232,7 +1234,6 @@ const w = weapons[item]
 
 if(!w) return msg.reply("Item không tồn tại")
 
-const user = getUser(msg.author.id)
 
 if(w.currency==="vnd"){
 
@@ -1262,8 +1263,6 @@ if(cmd==="equip"){
 
 const item = args[0]
 
-const user = getUser(msg.author.id)
-
 if(!user.inventory.includes(item))
 return msg.reply("Bạn không có item này")
 
@@ -1275,8 +1274,6 @@ msg.reply(`Đã trang bị ${weapons[item].name}`)
 
 
 const index = parseInt(args[0]) - 1
-
-const user = getUser(msg.author.id)
 
 if(!user.class)
 return msg.reply("Bạn chưa chọn class")
@@ -1296,7 +1293,6 @@ msg.reply(`Bạn đã trang bị skill **${list[index].name}**`)
 // =========/profile system/==========
 if(cmd==="profile"){
 
-const user = getUser(msg.author.id)
 
 const embed = gameEmbed(
 "👤 Hồ sơ người chơi",
@@ -1399,4 +1395,5 @@ res.send("Bot is running")
 
 
 app.listen(3000,()=>console.log("Server running"))
+
 
