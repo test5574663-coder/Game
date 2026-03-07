@@ -12,6 +12,16 @@ const client = new Client({
 client.once("ready", () => {
 console.log(`Bot online: ${client.user.tag}`)
 })
+// ==========/thanh mau/=========
+function hpBar(current, max, size = 10){
+
+const percent = current / max
+const filled = Math.round(percent * size)
+const empty = size - filled
+
+return "█".repeat(filled) + "░".repeat(empty)
+
+}
 
 // ======== EMBED SYSTEM ========
 
@@ -640,7 +650,7 @@ dragon = null
 }
 
 // check mỗi 10 phút
-setInterval(spawnDragon,36000)
+setInterval(spawnDragon,600000)
 
 
 // ======== MESSAGE COMMAND HANDLER ========
@@ -656,7 +666,6 @@ const cmd = args.shift().toLowerCase();
 const user = getUser(msg.author.id)
 
 
-// ======== DEV FORCE ========
 // ======== RANDOM EVENT SYSTEM ========
 
 let eventActive = false
@@ -725,211 +734,111 @@ msg.reply("Đã chọn class "+c);
 
 if(cmd==="miniboss"){
 
-if(!miniBoss) return msg.reply("Chưa spawn");
+if(!miniBoss) return msg.reply("❌ Chí Phèo chua xuất hiện")
 
-miniBoss.players.push(msg.author.id);
+if(!miniBoss.players.includes(msg.author.id))
+miniBoss.players.push(msg.author.id)
 
-let scale = miniBoss.players.length
+let dmg = user.atk + Math.floor(Math.random()*8)
 
-let dmg = 20 + Math.floor(Math.random()*10) + scale
+let skillText=""
 
-let skillText = ""
+if(user.class && user.skill!==null){
 
-if(user.skill !== null && user.class){
+const skill = skills[user.class]?.[user.skill]
 
-const skill = skills[user.class][user.skill]
-
-dmg += skill.dmg
-
-skillText = `\n✨ Skill: ${skill.name}`
+if(skill?.dmg){
+dmg+=skill.dmg
+skillText=`\n✨ Skill: ${skill.name}`
+}
 
 }
 
-miniBoss.hp -= dmg;
+miniBoss.hp=Math.max(0,miniBoss.hp-dmg)
 
-if(miniBoss.hp <= 0){
+const bar=hpBar(miniBoss.hp,miniBoss.maxHp)
+
+if(miniBoss.hp===0){
 
 miniBoss.players.forEach(p=>{
+const u=getUser(p)
+u.vnd+=200
+u.exp+=50
+})
 
-const u = getUser(p);
+miniBoss=null
 
-u.vnd += 200;
-u.exp += 50;
-
-});
-
-miniBoss = null;
-
-msg.reply("MiniBoss đã bị tiêu diệt");
-
-}else{
-
-msg.reply(`Bạn gây ${dmg} dmg${skillText}
-
-❤️ Boss còn **${miniBoss.hp} HP**`);
+return msg.channel.send("👹 **Chí Phèo ĐÃ BỊ TIÊU DIỆT!**")
 
 }
 
-}
+msg.reply(`👹 **Chí Phèo**
 
+❤️ ${bar}
+${miniBoss.hp}/${miniBoss.maxHp}
+
+⚔️ Bạn gây **${dmg} dmg**${skillText}`)
+
+}
 
 // ======== WORLD BOSS BATTLE ========
 
 if(cmd==="wboss"){
 
-if(!worldBoss) return msg.reply("Chưa spawn");
+if(!worldBoss) return msg.reply("❌ WorldBoss chưa spawn")
 
 if(!worldBoss.players.includes(msg.author.id))
 worldBoss.players.push(msg.author.id)
 
-let scale = worldBoss.players.length
+let dmg=user.atk+Math.floor(Math.random()*10)
 
-let dmg = 20 + Math.floor(Math.random()*10) + scale
+let skillText=""
 
-let skillText = ""
+if(user.class && user.skill!==null){
 
-if(user.skill !== null && user.class){
+const skill=skills[user.class]?.[user.skill]
 
-const skill = skills[user.class][user.skill]
-
-dmg += skill.dmg
-
-skillText = `\n✨ Skill: ${skill.name}`
+if(skill?.dmg){
+dmg+=skill.dmg
+skillText=`\n✨ Skill: ${skill.name}`
+}
 
 }
 
-if(worldBoss.phase===2) dmg = Math.floor(dmg*1.5)
+if(worldBoss.phase===2) dmg=Math.floor(dmg*1.5)
 
-worldBoss.hp -= dmg;
+worldBoss.hp=Math.max(0,worldBoss.hp-dmg)
 
-if(worldBoss.hp < 1500 && worldBoss.phase===1){
+if(worldBoss.hp<worldBoss.maxHp/2 && worldBoss.phase===1){
 
-worldBoss.phase = 2;
-
-if(Math.random()<0.1){
-
-msg.channel.send("💥 Boss tự bạo tiêu diệt tất cả");
-
-worldBoss=null;
-
-return;
+worldBoss.phase=2
+msg.channel.send("⚠️ **WORLD BOSS PHASE 2**")
 
 }
 
-msg.channel.send("⚠️ Boss vào Phase 2");
+const bar=hpBar(worldBoss.hp,worldBoss.maxHp,15)
 
-}
+if(worldBoss.hp===0){
 
-if(worldBoss.hp <= 0){
-
-let players=[...new Set(worldBoss.players)];
-
-if(players.length===4 && Math.random()<0.25){
-
-const traitor=players[Math.floor(Math.random()*players.length)];
-
-const u=getUser(traitor);
-
-u.gold+=1000;
-
-msg.channel.send(`<@${traitor}> đã phản bội và cướp hết thưởng!`);
-
-}else{
+let players=[...new Set(worldBoss.players)]
 
 players.forEach(p=>{
+const u=getUser(p)
+u.gold+=250
+})
 
-const u=getUser(p);
+worldBoss=null
 
-u.gold+=250;
-
-});
-
-}
-
-worldBoss=null;
-
-msg.channel.send("🌍 WorldBoss bị tiêu diệt");
-
-}else{
-
-msg.reply(`Bạn gây ${dmg} dmg${skillText}
-
-❤️ Boss còn **${worldBoss.hp} HP**`)
+return msg.channel.send("🌍 **WORLD BOSS ĐÃ BỊ TIÊU DIỆT!**")
 
 }
 
-}
-// ===== SKILL SYSTEM =====
+msg.reply(`🐉 **WORLD BOSS**
 
-if(user.skill !== null){
+❤️ ${bar}
+${worldBoss.hp}/${worldBoss.maxHp}
 
-const skill = skills[user.class][user.skill]
-
-dmg += skill.dmg
-
-}
-
-if(worldBoss.phase===2) dmg = Math.floor(dmg*1.5)
-
-worldBoss.hp-=dmg;
-
-if(worldBoss.hp<1500 && worldBoss.phase===1){
-
-worldBoss.phase=2;
-
-if(Math.random()<0.1){
-
-msg.channel.send("💥 Boss tự bạo tiêu diệt tất cả");
-
-worldBoss=null;
-
-return;
-
-}
-
-msg.channel.send("⚠️ Boss vào Phase 2");
-
-}
-
-if(worldBoss.hp<=0){
-
-let players=[...new Set(worldBoss.players)];
-
-if(players.length===4 && Math.random()<0.25){
-
-const traitor=players[Math.floor(Math.random()*players.length)];
-
-const u=getUser(traitor);
-
-u.gold+=1000;
-
-msg.channel.send(`<@${traitor}> đã phản bội và cướp hết thưởng!`);
-
-}else{
-
-players.forEach(p=>{
-
-const u=getUser(p);
-
-u.gold+=250;
-
-});
-
-}
-
-worldBoss=null;
-
-msg.channel.send("🌍 WorldBoss bị tiêu diệt");
-
-}else{
-
-msg.reply(`Bạn gây ${dmg} dmg${skillText}
-
-❤️ Boss còn **${worldBoss.hp} HP**`)
-
-}
-
-}
+⚔️ Bạn gây **${dmg} dmg**${skillText}`)
 
 }
 
@@ -1283,7 +1192,7 @@ const list = skills[user.class]
 if(!list[index])
 return msg.reply("Skill không tồn tại")
 
-user.skill = list[index]
+user.skill = index
 
 msg.reply(`Bạn đã trang bị skill **${list[index].name}**`)
 
@@ -1395,5 +1304,6 @@ res.send("Bot is running")
 
 
 app.listen(3000,()=>console.log("Server running"))
+
 
 
