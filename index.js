@@ -953,7 +953,6 @@ msg.reply(text)
 
 }
 
-// ===========/Mua Do/============
 
 // ======== WEAPON DATABASE ========
 
@@ -997,7 +996,7 @@ sword5:{
 name:"Thần Kiếm",
 class:"swordsman",
 atk:60,
-hp:100
+hp:100,
 price:25,
 currency:"gold"
 },
@@ -1032,7 +1031,7 @@ bow4:{
 name:"Cung Phượng Hoàng",
 class:"archer",
 atk:30,
-hp: 50
+hp: 50,
 price:10,
 currency:"gold"
 },
@@ -1075,7 +1074,7 @@ staff4:{
 name:"Trượng Hư Vô",
 class:"mage",
 atk:32,
-hp: 55
+hp: 55,
 price:12,
 currency:"gold"
 },
@@ -1084,7 +1083,7 @@ staff5:{
 name:"Thần Trượng",
 class:"mage",
 atk:50,
-hp:80
+hp:80,
 price:30,
 currency:"gold"
 },
@@ -1110,7 +1109,7 @@ currency:"vnd"
 shield3:{
 name:"Giáp Liệt Sĩ",
 class:"tank",
-atk:10
+atk:10,
 def:50,
 price:12000,
 currency:"vnd"
@@ -1119,8 +1118,8 @@ currency:"vnd"
 shield4:{
 name:"Tim Băng",
 class:"tank",
-atk:25
-def:55
+atk:25,
+def:55,
 hp:70,
 price:10,
 currency:"gold"
@@ -1129,8 +1128,8 @@ currency:"gold"
 shield5:{
 name:"Giáp Nguyệt Thần",
 class:"tank",
-atk:25
-def:70
+atk:25,
+def:70,
 hp:100,
 price:25,
 currency:"gold"
@@ -1173,7 +1172,7 @@ currency:"gold"
 dagger5:{
 name:"Nanh Rồng",
 class:"assassin",
-atk:80
+atk:80,
 hp:25,
 price:30,
 currency:"gold"
@@ -1208,7 +1207,7 @@ currency:"vnd"
 wand4:{
 name:"Gậy Thiên Sứ",
 class:"support",
-atk:28
+atk:28,
 hp:120,
 price:10,
 currency:"gold"
@@ -1217,7 +1216,7 @@ currency:"gold"
 wand5:{
 name:"Thánh Trượng",
 class:"support",
-atk:40
+atk:40,
 hp:90,
 price:25,
 currency:"gold"
@@ -1400,3 +1399,4 @@ res.send("Bot is running")
 
 
 app.listen(3000,()=>console.log("Server running"))
+
